@@ -26,30 +26,30 @@ export async function shibaswapForgeFixture(
 ): Promise<shibaswapForgeFixture> {
   const ssRewardManager = await deployContract(alice, MockPendleRewardManager, [
     govManager.address,
-    consts.FORGE_SUSHISWAP_SIMPLE,
+    consts.FORGE_SHIBASWAP,
   ]);
 
   const ssYieldContractDeployer = await deployContract(alice, PendleYieldContractDeployerBaseV2, [
     govManager.address,
-    consts.FORGE_SUSHISWAP_SIMPLE,
+    consts.FORGE_SHIBASWAP,
   ]);
 
   const shibaswapForge = await deployContract(alice, PendleShibaswapForge, [
     govManager.address,
     router.address,
-    consts.FORGE_SUSHISWAP_SIMPLE,
+    consts.FORGE_SHIBASWAP,
     tokens.USDT.address,
     ssRewardManager.address,
     ssYieldContractDeployer.address,
-    consts.CODE_HASH_SUSHISWAP,
-    consts.FACTORY_SUSHISWAP,
+    consts.CODE_HASH_SHIBASWAP,
+    consts.FACTORY_SHIBASWAP,
   ]);
 
   await ssRewardManager.setSkippingRewards(true, consts.HG);
 
   await ssRewardManager.initialize(shibaswapForge.address);
   await ssYieldContractDeployer.initialize(shibaswapForge.address);
-  await data.addForge(consts.FORGE_SUSHISWAP_SIMPLE, shibaswapForge.address, consts.HG);
+  await data.addForge(consts.FORGE_SHIBASWAP, shibaswapForge.address, consts.HG);
 
   await shibaswapForge.registerTokens(
     [tokens.SUSHI_USDT_WETH_LP.address],
@@ -59,20 +59,20 @@ export async function shibaswapForgeFixture(
   await setTimeNextBlock(consts.T0_SS);
 
   await router.newYieldContracts(
-    consts.FORGE_SUSHISWAP_SIMPLE,
+    consts.FORGE_SHIBASWAP,
     tokens.SUSHI_USDT_WETH_LP.address,
     consts.T0_SS.add(consts.SIX_MONTH),
     consts.HG
   );
 
   const otTokenAddress = await data.otTokens(
-    consts.FORGE_SUSHISWAP_SIMPLE,
+    consts.FORGE_SHIBASWAP,
     tokens.SUSHI_USDT_WETH_LP.address,
     consts.T0_SS.add(consts.SIX_MONTH)
   );
 
   const xytTokenAddress = await data.xytTokens(
-    consts.FORGE_SUSHISWAP_SIMPLE,
+    consts.FORGE_SHIBASWAP,
     tokens.SUSHI_USDT_WETH_LP.address,
     consts.T0_SS.add(consts.SIX_MONTH)
   );
