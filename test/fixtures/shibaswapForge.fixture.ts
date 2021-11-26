@@ -52,28 +52,28 @@ export async function shibaswapForgeFixture(
   await data.addForge(consts.FORGE_SHIBASWAP, shibaswapForge.address, consts.HG);
 
   await shibaswapForge.registerTokens(
-    [tokens.SUSHI_USDT_WETH_LP.address],
-    [[tokens.SUSHI_USDT_WETH_LP.address]],
+    [tokens.SHIBA_USDT_WETH_LP.address],
+    [[tokens.SHIBA_USDT_WETH_LP.address]],
     consts.HG
   );
   await setTimeNextBlock(consts.T0_SS);
 
   await router.newYieldContracts(
     consts.FORGE_SHIBASWAP,
-    tokens.SUSHI_USDT_WETH_LP.address,
+    tokens.SHIBA_USDT_WETH_LP.address,
     consts.T0_SS.add(consts.SIX_MONTH),
     consts.HG
   );
 
   const otTokenAddress = await data.otTokens(
     consts.FORGE_SHIBASWAP,
-    tokens.SUSHI_USDT_WETH_LP.address,
+    tokens.SHIBA_USDT_WETH_LP.address,
     consts.T0_SS.add(consts.SIX_MONTH)
   );
 
   const xytTokenAddress = await data.xytTokens(
     consts.FORGE_SHIBASWAP,
-    tokens.SUSHI_USDT_WETH_LP.address,
+    tokens.SHIBA_USDT_WETH_LP.address,
     consts.T0_SS.add(consts.SIX_MONTH)
   );
 

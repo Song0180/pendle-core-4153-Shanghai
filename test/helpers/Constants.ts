@@ -34,7 +34,7 @@ export const consts = {
   FORGE_SUSHISWAP_COMPLEX: utils.formatBytes32String('SushiswapComplex'),
   CODE_HASH_SUSHISWAP: web3.utils.hexToBytes('0xe18a34eb0e04b04f7a0ac29a6e80748dca96319b42c54d679cb821dca90c6303'),
   CODE_HASH_UNISWAP: web3.utils.hexToBytes('0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f'),
-  CODE_HASH_SHIBASWAP: web3.utils.hexToBytes(''),
+  CODE_HASH_SHIBASWAP: web3.utils.hexToBytes('0x65d1a3b1e46c6e4f1be1ad5f99ef14dc488ae0549dc97db9b30afe2241ce1c7a'),
   FACTORY_SUSHISWAP: '0xc0aee478e3658e2610c5f7a4a2e1777ce9e4f2ac',
   FACTORY_SHIBASWAP: '0x115934131916C8b277DD010Ee02de363c09d037c',
   FORGE_SUSHISWAP_SIMPLE: utils.formatBytes32String('SushiswapSimple'),
@@ -127,5 +127,9 @@ export const tokens: TokenMap = {
   SUSHI_USDT_WETH_LP: {
     address: '0x06da0fd433c1a5d7a4faa01111c044910a184553',
     decimal: 12,
+  },
+  SHIBA_USDT_WETH_LP: {
+    address: '0x703b120F15Ab77B986a24c6f9262364d02f9432f',
+    decimal: 18,
   },
 };
