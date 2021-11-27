@@ -29,7 +29,7 @@ export async function shibaswapForgeFixture(
     consts.FORGE_SHIBASWAP,
   ]);
 
-  const ssYieldContractDeployer = await deployContract(alice, PendleYieldContractDeployerBaseV2, [
+  const sbYieldContractDeployer = await deployContract(alice, PendleYieldContractDeployerBaseV2, [
     govManager.address,
     consts.FORGE_SHIBASWAP,
   ]);
@@ -40,7 +40,7 @@ export async function shibaswapForgeFixture(
     consts.FORGE_SHIBASWAP,
     tokens.USDT.address,
     sbRewardManager.address,
-    ssYieldContractDeployer.address,
+    sbYieldContractDeployer.address,
     consts.CODE_HASH_SHIBASWAP,
     consts.FACTORY_SHIBASWAP,
   ]);
@@ -48,7 +48,7 @@ export async function shibaswapForgeFixture(
   await sbRewardManager.setSkippingRewards(true, consts.HG);
 
   await sbRewardManager.initialize(shibaswapForge.address);
-  await ssYieldContractDeployer.initialize(shibaswapForge.address);
+  await sbYieldContractDeployer.initialize(shibaswapForge.address);
   await data.addForge(consts.FORGE_SHIBASWAP, shibaswapForge.address, consts.HG);
 
   await shibaswapForge.registerTokens(
