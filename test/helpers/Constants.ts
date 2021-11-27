@@ -96,6 +96,8 @@ export const consts = {
   COMP_ETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
   SUSHI_ADDRESS: '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2',
   SUSHI_USDT_WETH_PID: 0,
+  SHIBA_ADDRESS: '0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE',
+  SHIBA_USDT_WETH_PID: 0,
 };
 
 // export function setT0(time: BN) {

@@ -141,6 +141,14 @@ export async function getSushiLpValue(env: TestEnv, amount: BN): Promise<BN> {
   return amount.mul(kValue).mul(MULTIPLIER).div(totalSupply);
 }
 
+export async function getShibaLpValue(env: TestEnv, amount: BN): Promise<BN> {
+  let shibaPool: Contract = new Contract(tokens.SHIBA_USDT_WETH_LP.address, IUniswapV2Pair.abi, alice);
+  let { reserve0, reserve1 } = await shibaPool.getReserves();
+  let kValue: BN = sqrt(reserve0.mul(reserve1));
+  let totalSupply: BN = await shibaPool.totalSupply();
+  return amount.mul(kValue).mul(MULTIPLIER).div(totalSupply);
+}
+
 export async function logTokenBalance(token: Contract, people: Wallet[]) {
   for (let person of people) {
     console.log((await token.balanceOf(person.address)).toString());

@@ -7,9 +7,11 @@ import {
   evm_revert,
   evm_snapshot,
   getSushiLpValue,
+  getShibaLpValue,
   mintAaveV2Token,
   mintCompoundToken,
   mintSushiswapLpFixed,
+  mintShibaswapLpFixed,
   tokenizeYield,
 } from '../../helpers';
 
@@ -38,6 +40,7 @@ export async function runTest(mode: Mode) {
         else if (mode == Mode.COMPOUND || mode == Mode.COMPOUND_V2)
           await mintCompoundToken(env.underlyingAsset, person, env.INITIAL_YIELD_TOKEN_AMOUNT);
         else if (mode == Mode.SUSHISWAP_COMPLEX || mode == Mode.SUSHISWAP_SIMPLE) await mintSushiswapLpFixed(person);
+        else if (mode == Mode.SHIBASWAP) await mintShibaswapLpFixed(person);
         await env.yToken.connect(person).approve(env.router.address, consts.INF);
       }
       snapshotId = await evm_snapshot();
@@ -76,6 +79,17 @@ export async function runTest(mode: Mode) {
       approxBigNumber(
         await env.xyt.balanceOf(bob.address),
         (await getSushiLpValue(env, amount)).div(BN.from(10).pow(20)),
+        5
+      );
+    });
+    it('[Only Shiba]', async () => {
+      if (mode != Mode.SHIBASWAP) return;
+      const amount = BN.from(1000000000);
+      await emptyToken(env.yToken, bob);
+      await tokenizeYield(env, alice, amount, bob.address);
+      approxBigNumber(
+        await env.xyt.balanceOf(bob.address),
+        (await getShibaLpValue(env, amount)).div(BN.from(10).pow(20)),
         5
       );
     });

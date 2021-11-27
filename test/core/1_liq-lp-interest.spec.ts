@@ -20,7 +20,7 @@ import { runTest } from './common-test/liq-lp-interest-common-test';
 //   if (checkDisabled(Mode.SUSHISWAP_SIMPLE)) return;
 //   runTest(Mode.SUSHISWAP_SIMPLE);
 // });
-// describe('shibaswap-liquidityMining-lp-interest', () => {
-//   if (checkDisabled(Mode.SHIBASWAP)) return;
-//   runTest(Mode.SHIBASWAP);
-// });
+describe('shibaswap-liquidityMining-lp-interest', () => {
+  if (checkDisabled(Mode.SHIBASWAP)) return;
+  runTest(Mode.SHIBASWAP);
+});

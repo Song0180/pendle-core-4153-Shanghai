@@ -16,6 +16,7 @@ import {
   getContractAt,
   mineBlock,
   mintSushiswapLpFixed,
+  mintShibaswapLpFixed,
   randomBN,
   randomNumber,
   setTimeNextBlock,
@@ -35,6 +36,7 @@ export async function runTest(mode: Mode) {
     let env: TestEnv = {} as TestEnv;
     let masterchef: Contract;
     let sushiToken: Contract;
+    let shibaToken: Contract;
     const REF_AMOUNT = BN.from('1000000');
 
     async function buildTestEnv() {
@@ -45,6 +47,7 @@ export async function runTest(mode: Mode) {
     before(async () => {
       await buildTestEnv();
       sushiToken = await getContractAt('IERC20', consts.SUSHI_ADDRESS);
+      shibaToken = await getContractAt('IERC20', consts.SHIBA_ADDRESS);
       masterchef = await getContractAt('IMasterChef', consts.MASTERCHEF_V1_ADDRESS);
       globalSnapshotId = await evm_snapshot();
       snapshotId = await evm_snapshot();
@@ -59,6 +62,7 @@ export async function runTest(mode: Mode) {
       snapshotId = await evm_snapshot();
       for (let person of wallets) {
         await mintSushiswapLpFixed(person);
+        await mintShibaswapLpFixed(person);
         await env.yToken.connect(person).approve(masterchef.address, consts.INF, consts.HG);
         await env.yToken.connect(person).approve(env.liq.address, consts.INF, consts.HG);
       }
@@ -70,6 +74,7 @@ export async function runTest(mode: Mode) {
 
       for (let i = 0; i < wallets.length; ++i) {
         await masterchef.connect(wallets[i]).deposit(consts.SUSHI_USDT_WETH_PID, REF_AMOUNT.mul(i + 1), consts.HG);
+        await masterchef.connect(wallets[i]).deposit(consts.SHIBA_USDT_WETH_PID, REF_AMOUNT.mul(i + 1), consts.HG);
       }
       await mineBlock();
       await mineBlock();
@@ -79,6 +84,11 @@ export async function runTest(mode: Mode) {
       for (let i = 0; i < wallets.length; ++i) {
         await masterchef.connect(wallets[i]).withdraw(consts.SUSHI_USDT_WETH_PID, REF_AMOUNT.mul(i + 1), consts.HG);
         balanceBefore.push(await sushiToken.balanceOf(wallets[i].address));
+      }
+
+      for (let i = 0; i < wallets.length; ++i) {
+        await masterchef.connect(wallets[i]).withdraw(consts.SHIBA_USDT_WETH_PID, REF_AMOUNT.mul(i + 1), consts.HG);
+        balanceBefore.push(await shibaToken.balanceOf(wallets[i].address));
       }
 
       let balanceAfter: BN[] = [];
@@ -96,6 +106,12 @@ export async function runTest(mode: Mode) {
         balanceAfter.push(await sushiToken.balanceOf(person.address));
       }
 
+      for (let person of wallets) {
+        await env.liq.redeemDueInterests(person.address, consts.HG);
+        balanceAfter.push(await shibaToken.balanceOf(person.address));
+      }
+
+
       for (let i = 0; i < wallets.length; ++i) {
         approxBigNumber(balanceAfter[i].div(2), balanceBefore[i], 10, true);
       }
@@ -105,6 +121,7 @@ export async function runTest(mode: Mode) {
       async function _stake(isToMasterChef: boolean, person: Wallet, amount: BN): Promise<void> {
         if (isToMasterChef) {
           await masterchef.connect(person).deposit(consts.SUSHI_USDT_WETH_PID, amount, consts.HG);
+          await masterchef.connect(person).deposit(consts.SHIBA_USDT_WETH_PID, amount, consts.HG);
         } else {
           await stake(env, person, amount);
         }
@@ -113,6 +130,7 @@ export async function runTest(mode: Mode) {
       async function _redeemDueInterests(isToMasterChef: boolean, person: Wallet): Promise<void> {
         if (isToMasterChef) {
           await masterchef.connect(person).withdraw(consts.SUSHI_USDT_WETH_PID, 0, consts.HG);
+          await masterchef.connect(person).withdraw(consts.SHIBA_USDT_WETH_PID, 0, consts.HG);
         } else {
           await env.liq.redeemDueInterests(person.address, consts.HG);
         }
@@ -121,6 +139,7 @@ export async function runTest(mode: Mode) {
       async function _withdraw(isToMasterChef: boolean, person: Wallet, amount: BN): Promise<void> {
         if (isToMasterChef) {
           await masterchef.connect(person).withdraw(consts.SUSHI_USDT_WETH_PID, amount, consts.HG);
+          await masterchef.connect(person).withdraw(consts.SHIBA_USDT_WETH_PID, amount, consts.HG);
         } else {
           await withdraw(env, person, amount);
         }
@@ -161,6 +180,11 @@ export async function runTest(mode: Mode) {
         approxByPercent(
           await sushiToken.balanceOf(wallets[i].address),
           await sushiToken.balanceOf(wallets[i + 2].address),
+          BN.from(10000)
+        );
+        approxByPercent(
+          await shibaToken.balanceOf(wallets[i].address),
+          await shibaToken.balanceOf(wallets[i + 2].address),
           BN.from(10000)
         );
       }
