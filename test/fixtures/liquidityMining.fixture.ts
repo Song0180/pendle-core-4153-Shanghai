@@ -34,6 +34,7 @@ export interface LiquidityMiningFixture {
   c2LiquidityMining8: Contract;
   scLiquidityMining: Contract;
   ssLiquidityMining: Contract;
+  sbLiquidityMining: Contract;
   sushiLiquidityMiningV2: Contract;
   params: LiqParams;
   whitelist: Contract;
@@ -99,7 +100,9 @@ export async function liquidityMiningFixture(
     scForge,
     scMarket,
     ssForge,
+    sbForge,
     ssMarket,
+    sbMarket,
   } = marketFix;
 
   let a2LiquidityMining: Contract = {} as Contract;
@@ -110,6 +113,7 @@ export async function liquidityMiningFixture(
   let c2LiquidityMining8: Contract = {} as Contract;
   let scLiquidityMining: Contract = {} as Contract;
   let ssLiquidityMining: Contract = {} as Contract;
+  let sbLiquidityMining: Contract = {} as Contract;
   let sushiLiquidityMiningV2: Contract = {} as Contract;
 
   let router = core.router;
@@ -432,6 +436,46 @@ export async function liquidityMiningFixture(
     }
   }
 
+  if (!checkDisabled(Mode.SHIBASWAP)) {
+    let sbXyt = sbForge.sbFutureYieldToken;
+    await router.bootstrapMarket(
+      consts.MARKET_FACTORY_GENERIC,
+      sbXyt.address,
+      testToken.address,
+      amount.mul(10 ** 6),
+      amount.mul(10 ** 6),
+      consts.HG
+    );
+    sbLiquidityMining = await deployContract(alice, PendleGenericLiquidityMining, [
+      core.govManager.address,
+      core.pausingManager.address,
+      whitelist.address,
+      pdl.address,
+      router.address,
+      consts.MARKET_FACTORY_GENERIC,
+      consts.FACTORY_SHIBASWAP,
+      tokens.SHIBA_USDT_WETH_LP.address,
+      testToken.address,
+      params.START_TIME,
+      params.EPOCH_DURATION,
+      params.VESTING_EPOCHS,
+    ]);
+    await pdl.approve(sbLiquidityMining.address, consts.INF);
+    for (var person of [alice, bob, charlie, dave]) {
+      await sbMarket.connect(person).approve(sbLiquidityMining.address, consts.INF);
+    }
+    await sbLiquidityMining.setAllocationSetting(
+      [consts.T0_SC.add(consts.SIX_MONTH)],
+      [params.TOTAL_NUMERATOR],
+      consts.HG
+    );
+    await sbLiquidityMining.fund(params.REWARDS_PER_EPOCH, consts.HG);
+    let lpBalanceSbMarket = await sbMarket.balanceOf(alice.address);
+    for (var person of [bob, charlie, dave]) {
+      await sbMarket.transfer(person.address, lpBalanceSbMarket.div(10), consts.HG);
+    }
+  }
+
   if (!checkDisabled(Mode.SLP_LIQ)) {
     sushiLiquidityMiningV2 = await deployContract(alice, PendleSLPLiquidityMining, [
       core.govManager.address,
@@ -473,6 +517,7 @@ export async function liquidityMiningFixture(
     params,
     whitelist,
     ssLiquidityMining,
+    sbLiquidityMining,
     sushiLiquidityMiningV2,
   };
 }

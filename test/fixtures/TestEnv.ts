@@ -28,6 +28,7 @@ export enum Mode {
   COMPOUND_V2,
   SUSHISWAP_COMPLEX,
   SUSHISWAP_SIMPLE,
+  SHIBASWAP,
   SLP_LIQ,
   GENERAL_TEST, // must only be enabled when all other modes are enabled
 }
@@ -190,6 +191,24 @@ export async function parseTestEnvRouterFixture(user: Wallet, mode: Mode, env: T
       await env.USDTContract.connect(person).approve(consts.SUSHISWAP_ROUTER_ADDRESS, consts.INF, consts.HG);
       await env.WETHContract.connect(person).approve(consts.SUSHISWAP_ROUTER_ADDRESS, consts.INF, consts.HG);
     }
+  } else if (env.mode === Mode.SHIBASWAP) {
+    env.T0 = consts.T0_SS;
+    env.EXPIRY = env.T0.add(consts.SIX_MONTH);
+    env.forge = fixture.sbForge.shibaswapForge;
+    env.ot = fixture.sbForge.sbOwnershipToken;
+    env.xyt = fixture.sbForge.sbFutureYieldToken;
+    env.rewardManager = fixture.sbForge.sbRewardManager;
+    env.yToken = await getERC20Contract(user, tokens.SHIBA_USDT_WETH_LP);
+
+    env.FORGE_ID = consts.FORGE_SHIBASWAP;
+    env.INITIAL_YIELD_TOKEN_AMOUNT = consts.INITIAL_SHIBA_TOKEN_AMOUNT;
+    env.underlyingAsset = tokens.SHIBA_USDT_WETH_LP;
+    for (var person of [alice, bob, charlie, dave, eve]) {
+      await env.USDTContract.connect(person).approve(consts.SHIBASWAP_ROUTER_ADDRESS, 0, consts.HG);
+      await env.WETHContract.connect(person).approve(consts.SHIBASWAP_ROUTER_ADDRESS, 0, consts.HG);
+      await env.USDTContract.connect(person).approve(consts.SHIBASWAP_ROUTER_ADDRESS, consts.INF, consts.HG);
+      await env.WETHContract.connect(person).approve(consts.SHIBASWAP_ROUTER_ADDRESS, consts.INF, consts.HG);
+    }
   } else {
     assert(false, 'NOT SUPPORTED');
   }
@@ -226,6 +245,9 @@ export async function parseTestEnvMarketFixture(user: Wallet, mode: Mode, env: T
   } else if (env.mode == Mode.SUSHISWAP_SIMPLE) {
     env.MARKET_FACTORY_ID = consts.MARKET_FACTORY_GENERIC;
     env.market = fixture.ssMarket;
+  } else if (env.mode == Mode.SHIBASWAP) {
+    env.MARKET_FACTORY_ID = consts.MARKET_FACTORY_GENERIC;
+    env.market = fixture.ssMarket;
   } else {
     assert(false, 'NOT SUPPORTED');
   }
@@ -260,6 +282,8 @@ export async function parseTestEnvLiquidityMiningFixture(
     env.liq = fixture.ssLiquidityMining;
   } else if (env.mode == Mode.SLP_LIQ) {
     env.liq = fixture.sushiLiquidityMiningV2;
+  } else if (env.mode == Mode.SHIBASWAP) {
+    env.liq = fixture.sbLiquidityMining;
   } else {
     assert(false, 'NOT SUPPORTED');
   }

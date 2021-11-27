@@ -11,11 +11,11 @@ import { GovernanceFixture } from './governance.fixture';
 const { waffle } = require('hardhat');
 const { deployContract } = waffle;
 
-export interface shibaswapForgeFixture {
+export interface ShibaswapForgeFixture {
   shibaswapForge: Contract;
-  ssOwnershipToken: Contract;
-  ssFutureYieldToken: Contract;
-  ssRewardManager: Contract;
+  sbOwnershipToken: Contract;
+  sbFutureYieldToken: Contract;
+  sbRewardManager: Contract;
 }
 
 export async function shibaswapForgeFixture(
@@ -23,8 +23,8 @@ export async function shibaswapForgeFixture(
   provider: providers.Web3Provider,
   { router, data, govManager }: CoreFixture,
   { pendle }: GovernanceFixture
-): Promise<shibaswapForgeFixture> {
-  const ssRewardManager = await deployContract(alice, MockPendleRewardManager, [
+): Promise<ShibaswapForgeFixture> {
+  const sbRewardManager = await deployContract(alice, MockPendleRewardManager, [
     govManager.address,
     consts.FORGE_SHIBASWAP,
   ]);
@@ -39,15 +39,15 @@ export async function shibaswapForgeFixture(
     router.address,
     consts.FORGE_SHIBASWAP,
     tokens.USDT.address,
-    ssRewardManager.address,
+    sbRewardManager.address,
     ssYieldContractDeployer.address,
     consts.CODE_HASH_SHIBASWAP,
     consts.FACTORY_SHIBASWAP,
   ]);
 
-  await ssRewardManager.setSkippingRewards(true, consts.HG);
+  await sbRewardManager.setSkippingRewards(true, consts.HG);
 
-  await ssRewardManager.initialize(shibaswapForge.address);
+  await sbRewardManager.initialize(shibaswapForge.address);
   await ssYieldContractDeployer.initialize(shibaswapForge.address);
   await data.addForge(consts.FORGE_SHIBASWAP, shibaswapForge.address, consts.HG);
 
@@ -77,13 +77,13 @@ export async function shibaswapForgeFixture(
     consts.T0_SS.add(consts.SIX_MONTH)
   );
 
-  const ssOwnershipToken = new Contract(otTokenAddress, MockPendleOwnershipToken.abi, alice);
-  const ssFutureYieldToken = new Contract(xytTokenAddress, PendleFutureYieldToken.abi, alice);
+  const sbOwnershipToken = new Contract(otTokenAddress, MockPendleOwnershipToken.abi, alice);
+  const sbFutureYieldToken = new Contract(xytTokenAddress, PendleFutureYieldToken.abi, alice);
 
   return {
     shibaswapForge,
-    ssOwnershipToken,
-    ssFutureYieldToken,
-    ssRewardManager,
+    sbOwnershipToken,
+    sbFutureYieldToken,
+    sbRewardManager,
   };
 }
