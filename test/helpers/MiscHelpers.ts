@@ -74,6 +74,37 @@ export async function addFakeIncomeSushi(env: TestEnv, user: Wallet, numRep?: nu
     }
   }
 }
+export async function addFakeIncomeShiba(env: TestEnv, user: Wallet, numRep?: number) {
+  if (numRep == null) {
+    numRep = 1;
+  }
+  let shibaRouter: Contract = new Contract(consts.SHIBASWAP_ROUTER_ADDRESS, IUniswapV2Router02.abi, user);
+  // let sushiPool: Contract = new Contract(tokens.SUSHI_USDT_WETH_LP.address, IUniswapV2Pair.abi, user);
+  const amountUSDT = BN.from(50 * 10 ** 6);
+  if ((await env.USDTContract.balanceOf(user.address)).lt(amountToWei(amountUSDT, 6))) {
+    await mint(tokens.USDT, user, amountUSDT);
+  }
+  while (numRep--) {
+    for (let i = 0; i < 2; i++) {
+      await shibaRouter.swapExactTokensForTokens(
+        env.USDTContract.balanceOf(user.address),
+        0,
+        [tokens.USDT.address, tokens.WETH.address],
+        user.address,
+        consts.INF,
+        consts.HG
+      );
+      await shibaRouter.swapExactTokensForTokens(
+        env.WETHContract.balanceOf(user.address),
+        0,
+        [tokens.WETH.address, tokens.USDT.address],
+        user.address,
+        consts.INF,
+        consts.HG
+      );
+    }
+  }
+}
 
 export async function redeemRewardsFromProtocol(env: TestEnv, users: Wallet[]) {
   if (env.mode == Mode.AAVE_V2) {

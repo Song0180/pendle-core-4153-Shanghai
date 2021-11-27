@@ -2,6 +2,7 @@ import { BigNumber as BN } from 'ethers';
 import {
   addFakeIncomeCompoundUSDT,
   addFakeIncomeSushi,
+  addFakeIncomeShiba,
   approxBigNumber,
   consts,
   emptyToken,
@@ -97,6 +98,7 @@ export function runTest(mode: Mode) {
         }
         if (mode == Mode.COMPOUND) await addFakeIncomeCompoundUSDT(env, eve);
         else if (mode == Mode.SUSHISWAP_COMPLEX || mode == Mode.SUSHISWAP_SIMPLE) await addFakeIncomeSushi(env, eve);
+        else if (mode == Mode.SHIBASWAP) await addFakeIncomeShiba(env, eve);
       }
 
       await redeemDueInterests(env, eve);
