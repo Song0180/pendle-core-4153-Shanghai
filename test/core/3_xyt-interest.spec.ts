@@ -21,10 +21,10 @@ import { runTest } from './common-test/xyt-interest-test';
 //   runTest(Mode.SUSHISWAP_COMPLEX);
 // });
 
-// describe('SushiswapSimple-xyt-interest', function () {
-//   if (checkDisabled(Mode.SUSHISWAP_SIMPLE)) return;
-//   runTest(Mode.SUSHISWAP_SIMPLE);
-// });
+describe('SushiswapSimple-xyt-interest', function () {
+  if (checkDisabled(Mode.SUSHISWAP_SIMPLE)) return;
+  runTest(Mode.SUSHISWAP_SIMPLE);
+});
 
 describe('Shibaswap-xyt-interest', function () {
   if (checkDisabled(Mode.SHIBASWAP)) return;

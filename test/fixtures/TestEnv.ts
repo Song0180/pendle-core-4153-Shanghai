@@ -247,7 +247,7 @@ export async function parseTestEnvMarketFixture(user: Wallet, mode: Mode, env: T
     env.market = fixture.ssMarket;
   } else if (env.mode == Mode.SHIBASWAP) {
     env.MARKET_FACTORY_ID = consts.MARKET_FACTORY_GENERIC;
-    env.market = fixture.ssMarket;
+    env.market = fixture.sbMarket;
   } else {
     assert(false, 'NOT SUPPORTED');
   }

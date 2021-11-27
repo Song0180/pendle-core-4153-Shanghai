@@ -11,10 +11,10 @@ import { runTest } from './common-test/forge-fee-common-test';
 //   runTest(Mode.SUSHISWAP_COMPLEX);
 // });
 
-// describe('sushi-simple-forge-fee', async () => {
-//   if (checkDisabled(Mode.SUSHISWAP_SIMPLE)) return;
-//   runTest(Mode.SUSHISWAP_SIMPLE);
-// });
+describe('sushi-simple-forge-fee', async () => {
+  if (checkDisabled(Mode.SUSHISWAP_SIMPLE)) return;
+  runTest(Mode.SUSHISWAP_SIMPLE);
+});
 
 describe('shiba-forge-fee', async () => {
   if (checkDisabled(Mode.SHIBASWAP)) return;

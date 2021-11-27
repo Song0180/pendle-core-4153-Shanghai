@@ -16,10 +16,10 @@ import { runTest } from './common-test/liq-lp-interest-common-test';
 //   if (checkDisabled(Mode.SUSHISWAP_COMPLEX)) return;
 //   runTest(Mode.SUSHISWAP_COMPLEX);
 // });
-// describe('sushiswapSimple-liquidityMining-lp-interest', function () {
-//   if (checkDisabled(Mode.SUSHISWAP_SIMPLE)) return;
-//   runTest(Mode.SUSHISWAP_SIMPLE);
-// });
+describe('sushiswapSimple-liquidityMining-lp-interest', function () {
+  if (checkDisabled(Mode.SUSHISWAP_SIMPLE)) return;
+  runTest(Mode.SUSHISWAP_SIMPLE);
+});
 describe('shibaswap-liquidityMining-lp-interest', () => {
   if (checkDisabled(Mode.SHIBASWAP)) return;
   runTest(Mode.SHIBASWAP);

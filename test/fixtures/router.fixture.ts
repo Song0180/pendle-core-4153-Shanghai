@@ -10,6 +10,7 @@ import {
   getCContract,
   getERC20Contract,
   mint,
+  mintShibaswapLpFixed,
   mintSushiswapLpFixed,
   tokens,
 } from '../helpers';
@@ -65,6 +66,10 @@ export async function routerFixture(_: Wallet[], __: providers.Web3Provider): Pr
     await mintSushiswapLpFixed(alice);
     await bufferSushi(noMintFixture);
   }
+  if (!checkDisabled(Mode.SHIBASWAP)) {
+    await mintShibaswapLpFixed(alice);
+    await bufferShiba(noMintFixture);
+  }
   return {
     core: noMintFixture.core,
     governance: noMintFixture.governance,
@@ -97,6 +102,19 @@ async function bufferSushi(noMintFixture: RouterFixture) {
   await sushiPool.connect(eve).transfer(ssYieldTokenHolderAddr, 10);
   await ssYieldTokenHolder.afterReceiveTokens(10);
   await emptyToken(sushiPool, eve);
+}
+
+async function bufferShiba(noMintFixture: RouterFixture) {
+  await mintShibaswapLpFixed(eve);
+  const shibaPool = await getERC20Contract(alice, tokens.SHIBA_USDT_WETH_LP);
+  const sbYieldTokenHolderAddr = await noMintFixture.sbForge.shibaswapForge.yieldTokenHolders(
+    tokens.SHIBA_USDT_WETH_LP.address,
+    consts.T0_SS.add(consts.SIX_MONTH)
+  );
+  const sbYieldTokenHolder = new Contract(sbYieldTokenHolderAddr, IPendleYieldTokenHolderV2.abi, alice);
+  await shibaPool.connect(eve).transfer(sbYieldTokenHolderAddr, 10);
+  await sbYieldTokenHolder.afterReceiveTokens(10);
+  await emptyToken(shibaPool, eve);
 }
 
 export async function routerFixtureNoMint(_: Wallet[], provider: providers.Web3Provider): Promise<RouterFixture> {
