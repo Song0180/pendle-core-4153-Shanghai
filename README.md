@@ -6,6 +6,9 @@ By group SHANGHAI
 [Smart contract](./contracts/core/shibaswap/PendleShibaswapForge.sol)  
 [Test](./test/fixtures/shibaswapForge.fixture.ts)  
   
+To install dependencies:
+`yarn` or `yarn install`
+  
 To Compile  
 `yarn compile`  
   
