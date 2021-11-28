@@ -4,6 +4,7 @@ import { Mode, parseTestEnvRouterFixture, routerFixture, RouterFixture, TestEnv 
 import {
   addFakeIncomeCompoundUSDT,
   addFakeIncomeSushi,
+  addFakeIncomeShiba,
   advanceTime,
   approxBigNumber,
   approxByPercent,
@@ -12,9 +13,11 @@ import {
   evm_revert,
   evm_snapshot,
   getSushiLpValue,
+  getShibaLpValue,
   mintAaveV2Token,
   mintCompoundToken,
   mintSushiswapLpFixed,
+  mintShibaswapLpFixed,
   otBalance,
   randomBN,
   randomNumber,
@@ -51,6 +54,7 @@ export async function runTest(mode: Mode) {
         else if (mode == Mode.COMPOUND || mode == Mode.COMPOUND_V2)
           await mintCompoundToken(env.underlyingAsset, person, env.INITIAL_YIELD_TOKEN_AMOUNT);
         else if (mode == Mode.SUSHISWAP_COMPLEX || mode == Mode.SUSHISWAP_SIMPLE) await mintSushiswapLpFixed(person);
+        else if (mode == Mode.SHIBASWAP) await mintShibaswapLpFixed(person);
         await env.yToken.connect(person).approve(env.router.address, consts.INF);
       }
       snapshotId = await evm_snapshot();
@@ -94,6 +98,7 @@ export async function runTest(mode: Mode) {
       if (rep == null) rep = 1;
       if (mode == Mode.COMPOUND || mode == Mode.COMPOUND_V2) await addFakeIncomeCompoundUSDT(env, eve);
       else if (mode == Mode.SUSHISWAP_COMPLEX || mode == Mode.SUSHISWAP_SIMPLE) await addFakeIncomeSushi(env, eve, rep);
+      else if (mode == Mode.SHIBASWAP) await addFakeIncomeShiba(env, eve, rep);
     }
 
     it('users should receive the same amount after full withdrawal despite actions they have performed', async () => {
@@ -193,6 +198,57 @@ export async function runTest(mode: Mode) {
       }
       let postValue: BN = await getSushiLpValue(env, amountDave);
       let gainDave: BN = await getSushiLpValue(env, await yTokenBalance(env, dave));
+      await approxByPercent(gainDave, postValue.sub(preValue));
+    });
+
+    it('users having tokenized yield should receive the same amount of interest as receive directly from platform', async () => {
+      if (mode != Mode.SHIBASWAP) return;
+
+      const totalTime = consts.SIX_MONTH;
+      const numTurns = 40;
+
+      let amountDave: BN = await yTokenBalance(env, dave);
+      let preValue: BN = await getShibaLpValue(env, amountDave);
+
+      await tokenizeYield(env, dave, amountDave);
+      for (let i = 1; i <= numTurns; i++) {
+        await addFundsToForge();
+        const testTime = env.T0.add(totalTime.div(numTurns).mul(i)).sub(100);
+        await setTimeNextBlock(testTime);
+        let userID = randomBN(3).toNumber();
+        let actionType: Action = randomNumber(3);
+        let amount: BN;
+
+        if ((await otBalance(env, wallets[userID])).eq(0)) {
+          actionType = Action.TokenizeYield;
+        }
+
+        switch (actionType) {
+          case Action.TokenizeYield:
+            amount = randomBN(await yTokenBalance(env, wallets[userID]));
+            await tokenizeYield(env, wallets[userID], amount);
+            break;
+          case Action.RedeemDueInterests:
+            await redeemDueInterests(env, wallets[userID]);
+            break;
+          case Action.RedeemUnderlying:
+            amount = randomBN(await otBalance(env, wallets[userID]));
+            await redeemUnderlying(env, wallets[userID], amount);
+            break;
+          default:
+            break;
+        }
+        await addFakeIncome();
+      }
+      await setTimeNextBlock(env.EXPIRY.sub(10));
+      await tokenizeYield(env, alice, BN.from(1));
+
+      await setTimeNextBlock(env.EXPIRY.add(100));
+      for (var user of [alice, bob, charlie, dave]) {
+        await redeemDueInterests(env, user);
+      }
+      let postValue: BN = await getShibaLpValue(env, amountDave);
+      let gainDave: BN = await getShibaLpValue(env, await yTokenBalance(env, dave));
       await approxByPercent(gainDave, postValue.sub(preValue));
     });
 

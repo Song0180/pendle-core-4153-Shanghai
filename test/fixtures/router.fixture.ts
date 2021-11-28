@@ -10,6 +10,7 @@ import {
   getCContract,
   getERC20Contract,
   mint,
+  mintShibaswapLpFixed,
   mintSushiswapLpFixed,
   tokens,
 } from '../helpers';
@@ -21,6 +22,7 @@ import { coreFixture, CoreFixture } from './core.fixture';
 import { GovernanceFixture, governanceFixture } from './governance.fixture';
 import { SushiswapComplexForgeFixture, sushiswapComplexForgeFixture } from './SushiswapComplexForge.fixture';
 import { SushiswapSimpleForgeFixture, sushiswapSimpleForgeFixture } from './SushiswapSimpleForge.fixture';
+import { ShibaswapForgeFixture, shibaswapForgeFixture } from './shibaswapForge.fixture';
 const { waffle, network } = require('hardhat');
 const { loadFixture } = waffle;
 
@@ -33,6 +35,7 @@ export interface RouterFixture {
   c2Forge: CompoundV2Fixture;
   scForge: SushiswapComplexForgeFixture;
   ssForge: SushiswapSimpleForgeFixture;
+  sbForge: ShibaswapForgeFixture;
   minted: boolean;
 }
 
@@ -63,6 +66,10 @@ export async function routerFixture(_: Wallet[], __: providers.Web3Provider): Pr
     await mintSushiswapLpFixed(alice);
     await bufferSushi(noMintFixture);
   }
+  if (!checkDisabled(Mode.SHIBASWAP)) {
+    await mintShibaswapLpFixed(alice);
+    await bufferShiba(noMintFixture);
+  }
   return {
     core: noMintFixture.core,
     governance: noMintFixture.governance,
@@ -72,6 +79,7 @@ export async function routerFixture(_: Wallet[], __: providers.Web3Provider): Pr
     c2Forge: noMintFixture.c2Forge,
     scForge: noMintFixture.scForge,
     ssForge: noMintFixture.ssForge,
+    sbForge: noMintFixture.sbForge,
     minted: true,
   };
 }
@@ -96,6 +104,19 @@ async function bufferSushi(noMintFixture: RouterFixture) {
   await emptyToken(sushiPool, eve);
 }
 
+async function bufferShiba(noMintFixture: RouterFixture) {
+  await mintShibaswapLpFixed(eve);
+  const shibaPool = await getERC20Contract(alice, tokens.SHIBA_USDT_WETH_LP);
+  const sbYieldTokenHolderAddr = await noMintFixture.sbForge.shibaswapForge.yieldTokenHolders(
+    tokens.SHIBA_USDT_WETH_LP.address,
+    consts.T0_SS.add(consts.SIX_MONTH)
+  );
+  const sbYieldTokenHolder = new Contract(sbYieldTokenHolderAddr, IPendleYieldTokenHolderV2.abi, alice);
+  await shibaPool.connect(eve).transfer(sbYieldTokenHolderAddr, 10);
+  await sbYieldTokenHolder.afterReceiveTokens(10);
+  await emptyToken(shibaPool, eve);
+}
+
 export async function routerFixtureNoMint(_: Wallet[], provider: providers.Web3Provider): Promise<RouterFixture> {
   const wallets = waffle.provider.getWallets();
   const [alice] = wallets;
@@ -108,6 +129,7 @@ export async function routerFixtureNoMint(_: Wallet[], provider: providers.Web3P
   let c2Forge: CompoundV2Fixture = {} as CompoundV2Fixture;
   let scForge: SushiswapComplexForgeFixture = {} as SushiswapComplexForgeFixture;
   let ssForge: SushiswapSimpleForgeFixture = {} as SushiswapSimpleForgeFixture;
+  let sbForge: ShibaswapForgeFixture = {} as ShibaswapForgeFixture;
 
   if (!checkDisabled(Mode.AAVE_V2)) {
     a2Forge = await aaveV2ForgeFixture(alice, provider, core, governance);
@@ -133,5 +155,8 @@ export async function routerFixtureNoMint(_: Wallet[], provider: providers.Web3P
   if (!checkDisabled(Mode.SUSHISWAP_SIMPLE)) {
     ssForge = await sushiswapSimpleForgeFixture(alice, provider, core, governance);
   }
-  return { core, governance, aaveV2, a2Forge, cForge, c2Forge, scForge, ssForge, minted: false };
+  if (!checkDisabled(Mode.SHIBASWAP)) {
+    sbForge = await shibaswapForgeFixture(alice, provider, core, governance);
+  }
+  return { core, governance, aaveV2, a2Forge, cForge, c2Forge, scForge, ssForge, sbForge, minted: false };
 }

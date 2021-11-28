@@ -5,6 +5,7 @@ import { Mode, parseTestEnvRouterFixture, routerFixture, RouterFixture, TestEnv 
 import {
   addFakeIncomeCompoundUSDT,
   addFakeIncomeSushi,
+  addFakeIncomeShiba,
   amountToWei,
   approxBigNumber,
   consts,
@@ -14,6 +15,7 @@ import {
   mintAaveV2Token,
   mintCompoundToken,
   mintSushiswapLpFixed,
+  mintShibaswapLpFixed,
   randomBN,
   redeemDueInterests,
   setTimeNextBlock,
@@ -67,6 +69,10 @@ export function runTest(mode: Mode) {
         await mintSushiswapLpFixed(alice);
         REF_AMOUNT = BN.from(10000000);
         underlyingAsset = tokens.SUSHI_USDT_WETH_LP;
+      } else if (mode == Mode.SHIBASWAP) {
+        await mintShibaswapLpFixed(alice);
+        REF_AMOUNT = BN.from(10000000);
+        underlyingAsset = tokens.SHIBA_USDT_WETH_LP;
       } else if (mode == Mode.COMPOUND_V2) {
         underlyingAsset = env.underlyingAsset;
         REF_AMOUNT = BN.from(10000000);
@@ -84,6 +90,12 @@ export function runTest(mode: Mode) {
       if (mode == Mode.SUSHISWAP_COMPLEX || mode == Mode.SUSHISWAP_SIMPLE) {
         const lastExchangeRate: BN = await env.forge.callStatic.getExchangeRate(underlyingAsset.address);
         await addFakeIncomeSushi(env, alice);
+        const nowExchangeRate: BN = await env.forge.callStatic.getExchangeRate(underlyingAsset.address);
+        charlieInterest = REF_AMOUNT.mul(nowExchangeRate).div(lastExchangeRate).sub(REF_AMOUNT);
+        await redeemDueInterests(env, bob);
+      } else if (mode == Mode.SHIBASWAP) {
+        const lastExchangeRate: BN = await env.forge.callStatic.getExchangeRate(underlyingAsset.address);
+        await addFakeIncomeShiba(env, alice);
         const nowExchangeRate: BN = await env.forge.callStatic.getExchangeRate(underlyingAsset.address);
         charlieInterest = REF_AMOUNT.mul(nowExchangeRate).div(lastExchangeRate).sub(REF_AMOUNT);
         await redeemDueInterests(env, bob);
@@ -110,6 +122,8 @@ export function runTest(mode: Mode) {
 
       if (mode == Mode.SUSHISWAP_COMPLEX || mode == Mode.SUSHISWAP_SIMPLE) {
         await addFakeIncomeSushi(env, alice);
+      } else if (mode == Mode.SHIBASWAP) {
+        await addFakeIncomeShiba(env, alice);
       } else if (mode == Mode.AAVE_V2) {
         await setTimeNextBlock(env.T0.add(consts.ONE_MONTH));
       } else if (mode == Mode.COMPOUND_V2) {

@@ -125,6 +125,25 @@ export async function mintXytSushiswapSimpleFixed(user: Wallet, env: RouterFixtu
     );
   return postTokenBal.sub(preTokenBal);
 }
+export async function mintXytShibaswapFixed(user: Wallet, env: RouterFixture, expiry: BN): Promise<BN> {
+  let router = env.core.router;
+  const sbContract = await getERC20Contract(user, tokens.SHIBA_USDT_WETH_LP);
+  let preTokenBal = await sbContract.balanceOf(user.address);
+  await mintShibaswapLpFixed(user);
+  await sbContract.approve(router.address, consts.INF);
+  let postTokenBal = await sbContract.balanceOf(user.address);
+  await router
+    .connect(user)
+    .tokenizeYield(
+      consts.FORGE_SHIBASWAP,
+      tokens.SHIBA_USDT_WETH_LP.address,
+      expiry,
+      postTokenBal.sub(preTokenBal),
+      user.address,
+      consts.HG
+    );
+  return postTokenBal.sub(preTokenBal);
+}
 
 export async function mint(token: Token, alice: Wallet, amount: BN) {
   if (token == tokens.USDT) {
@@ -248,6 +267,33 @@ export async function mintSushiswapLpFixed(user: Wallet) {
   await WETHErc20.connect(user).approve(consts.SUSHISWAP_ROUTER_ADDRESS, consts.INF, consts.HG);
 
   await sushiRouter.addLiquidity(
+    tokens.USDT.address,
+    tokens.WETH.address,
+    amountToWei(amountUSDT, 6),
+    amountToWei(amountWETH, 18),
+    0,
+    0,
+    user.address,
+    consts.INF,
+    consts.HG
+  );
+}
+
+export async function mintShibaswapLpFixed(user: Wallet) {
+  let shibaRouter: Contract = new Contract(consts.SHIBASWAP_ROUTER_ADDRESS, IUniswapV2Router02.abi, user);
+  let USDTErc20: Contract = await getERC20Contract(user, tokens.USDT);
+  let WETHErc20: Contract = await getERC20Contract(user, tokens.WETH);
+
+  const amountUSDT = BN.from(13000000);
+  const amountWETH = BN.from(6100);
+  await mint(tokens.USDT, user, amountUSDT);
+  await mint(tokens.WETH, user, amountWETH);
+  await USDTErc20.connect(user).approve(consts.SHIBASWAP_ROUTER_ADDRESS, 0, consts.HG);
+  await WETHErc20.connect(user).approve(consts.SHIBASWAP_ROUTER_ADDRESS, 0, consts.HG);
+  await USDTErc20.connect(user).approve(consts.SHIBASWAP_ROUTER_ADDRESS, consts.INF, consts.HG);
+  await WETHErc20.connect(user).approve(consts.SHIBASWAP_ROUTER_ADDRESS, consts.INF, consts.HG);
+
+  await shibaRouter.addLiquidity(
     tokens.USDT.address,
     tokens.WETH.address,
     amountToWei(amountUSDT, 6),

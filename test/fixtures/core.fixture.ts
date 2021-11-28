@@ -62,7 +62,8 @@ export async function coreFixture(_: Wallet[], provider: providers.Web3Provider)
   if (
     !checkDisabled(Mode.SUSHISWAP_COMPLEX) ||
     !checkDisabled(Mode.SUSHISWAP_SIMPLE) ||
-    !checkDisabled(Mode.COMPOUND_V2)
+    !checkDisabled(Mode.COMPOUND_V2) ||
+    !checkDisabled(Mode.SHIBASWAP)
   ) {
     genMarketFactory = await deployContract(alice, PendleGenericMarketFactory, [
       router.address,

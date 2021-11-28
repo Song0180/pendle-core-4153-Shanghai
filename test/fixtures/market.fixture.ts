@@ -12,6 +12,7 @@ import {
   mintXytCompoundV2,
   mintXytSushiswapComplexFixed,
   mintXytSushiswapSimpleFixed,
+  mintXytShibaswapFixed,
   tokens,
 } from '../helpers';
 import { AaveV2ForgeFixture } from './aaveV2Forge.fixture';
@@ -22,6 +23,7 @@ import { SushiswapComplexForgeFixture } from './SushiswapComplexForge.fixture';
 import { SushiswapSimpleForgeFixture } from './SushiswapSimpleForge.fixture';
 import { Mode, checkDisabled } from '.';
 import { CompoundV2Fixture } from './compoundV2Forge.fixture';
+import { ShibaswapForgeFixture } from './shibaswapForge.fixture';
 const { waffle } = hre;
 const { deployContract, loadFixture } = waffle;
 
@@ -33,6 +35,7 @@ export interface MarketFixture {
   c2Forge: CompoundV2Fixture;
   scForge: SushiswapComplexForgeFixture;
   ssForge: SushiswapSimpleForgeFixture;
+  sbForge: ShibaswapForgeFixture;
   testToken: Contract;
   a2Market: Contract;
   a2Market18: Contract;
@@ -44,6 +47,7 @@ export interface MarketFixture {
   c2Market8: Contract;
   scMarket: Contract;
   ssMarket: Contract;
+  sbMarket: Contract;
   mockMarketMath: Contract;
 }
 
@@ -51,13 +55,14 @@ export async function marketFixture(_: Wallet[], provider: providers.Web3Provide
   const wallets = waffle.provider.getWallets();
   const [alice, bob, charlie, dave, eve] = wallets;
   const routerFix = await loadFixture(routerFixtureNoMint);
-  const { core, a2Forge, cForge, c2Forge, scForge, ssForge } = routerFix;
+  const { core, a2Forge, cForge, c2Forge, scForge, ssForge, sbForge } = routerFix;
   const { router, a2MarketFactory, cMarketFactory, data, genMarketFactory } = core;
   const { a2FutureYieldToken, a2FutureYieldToken18 } = a2Forge;
   const { cFutureYieldToken, cFutureYieldToken8 } = cForge;
   const { c2FutureYieldToken, c2FutureYieldToken8 } = c2Forge;
   const { scFutureYieldToken } = scForge;
   const { ssFutureYieldToken } = ssForge;
+  const { sbFutureYieldToken } = sbForge;
 
   const testToken = await deployContract(alice, TestToken, ['Test Token', 'TEST', 6]);
   let a2Market: Contract = {} as Contract;
@@ -70,6 +75,7 @@ export async function marketFixture(_: Wallet[], provider: providers.Web3Provide
   let c2Market8: Contract = {} as Contract;
   let scMarket: Contract = {} as Contract;
   let ssMarket: Contract = {} as Contract;
+  let sbMarket: Contract = {} as Contract;
 
   if (!checkDisabled(Mode.AAVE_V2)) {
     for (var person of [alice, bob, charlie, dave]) {
@@ -184,7 +190,8 @@ export async function marketFixture(_: Wallet[], provider: providers.Web3Provide
   if (
     !checkDisabled(Mode.COMPOUND_V2) ||
     !checkDisabled(Mode.SUSHISWAP_SIMPLE) ||
-    !checkDisabled(Mode.SUSHISWAP_COMPLEX)
+    !checkDisabled(Mode.SUSHISWAP_COMPLEX) ||
+    !checkDisabled(Mode.SHIBASWAP)
   ) {
     await data.addMarketFactory(consts.MARKET_FACTORY_GENERIC, genMarketFactory.address, consts.HG);
   }
@@ -264,6 +271,21 @@ export async function marketFixture(_: Wallet[], provider: providers.Web3Provide
     ssMarket = new Contract(ssMarketAddress, PendleGenericMarket.abi, alice);
   }
 
+  if (!checkDisabled(Mode.SHIBASWAP)) {
+    for (var person of [alice, bob, charlie, dave]) {
+      await mintXytShibaswapFixed(person, routerFix, consts.T0_SS.add(consts.SIX_MONTH));
+    }
+    await data.setForgeFactoryValidity(consts.FORGE_SHIBASWAP, consts.MARKET_FACTORY_GENERIC, true, consts.HG);
+    // sbXYT - testToken
+    await router.createMarket(consts.MARKET_FACTORY_GENERIC, sbFutureYieldToken.address, testToken.address, consts.HG);
+    const sbMarketAddress = await data.getMarket(
+      consts.MARKET_FACTORY_GENERIC,
+      sbFutureYieldToken.address,
+      testToken.address
+    );
+    sbMarket = new Contract(sbMarketAddress, PendleGenericMarket.abi, alice);
+  }
+
   const totalSupply = await testToken.totalSupply();
   for (var person of [bob, charlie, dave, eve]) {
     await testToken.transfer(person.address, totalSupply.div(5), consts.HG);
@@ -292,6 +314,8 @@ export async function marketFixture(_: Wallet[], provider: providers.Web3Provide
     scMarket,
     mockMarketMath,
     ssForge,
+    sbForge,
     ssMarket,
+    sbMarket,
   };
 }
